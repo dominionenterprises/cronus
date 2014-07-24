@@ -1,5 +1,8 @@
 #cronus
 [![Build Status](http://img.shields.io/travis/dominionenterprises/cronus.svg?style=flat)](https://travis-ci.org/dominionenterprises/cronus)
+[![Latest Stable Version](http://img.shields.io/packagist/v/dominionenterprises/cronus.svg?style=flat)](https://packagist.org/packages/dominionenterprises/cronus)
+[![Total Downloads](http://img.shields.io/packagist/dt/dominionenterprises/cronus.svg?style=flat)](https://packagist.org/packages/dominionenterprises/cronus)
+[![License](http://img.shields.io/packagist/l/dominionenterprises/cronus.svg?style=flat)](https://packagist.org/packages/dominionenterprises/cronus)
 
 Process registry using MongoDB as a backend.
 
