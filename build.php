@@ -10,9 +10,14 @@ if ($returnStatus !== 0) {
 
 require 'vendor/autoload.php';
 
-$phpcsCommand = './vendor/bin/phpcs --standard=' . __DIR__ . '/vendor/dominionenterprises/dws-coding-standard/DWS -n src tests *.php';
-passthru($phpcsCommand, $returnStatus);
-if ($returnStatus !== 0) {
+$phpcsCLI = new PHP_CodeSniffer_CLI();
+$phpcsArguments = array(
+    'standard' => array(__DIR__ . '/vendor/dominionenterprises/dws-coding-standard/DWS'),
+    'files' => array('src', 'tests', 'build.php'),
+    'warningSeverity' => 0,
+);
+$phpcsViolations = $phpcsCLI->process($phpcsArguments);
+if ($phpcsViolations > 0) {
     exit(1);
 }
 
