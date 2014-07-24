@@ -1,5 +1,5 @@
 #cronus
-[![Build Status](https://travis-ci.org/dominionenterprises/cronus.png)](https://travis-ci.org/dominionenterprises/cronus)
+[![Build Status](http://img.shields.io/travis/dominionenterprises/cronus.svg?style=flat)](https://travis-ci.org/dominionenterprises/cronus)
 
 Process registry using MongoDB as a backend.
 
