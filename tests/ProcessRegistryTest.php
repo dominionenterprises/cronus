@@ -31,11 +31,11 @@ final class ProcessRegistryTest extends \PHPUnit_Framework_TestCase
         $this->assertSame(1, $this->_collection->count());
         $result = $this->_collection->findOne();
 
-        $expected = array(
+        $expected = [
             '_id' => 'testId',
-            'hosts' => array(HOSTNAME => array(getmypid() => ProcessRegistry::MONGO_INT32_MAX)),
+            'hosts' => [HOSTNAME => [getmypid() => ProcessRegistry::MONGO_INT32_MAX]],
             'version' => $result['version'],
-        );
+        ];
 
         $result['hosts'][HOSTNAME][getmypid()] = $result['hosts'][HOSTNAME][getmypid()]->sec;
         $this->assertSame($expected, $result);
@@ -49,11 +49,11 @@ final class ProcessRegistryTest extends \PHPUnit_Framework_TestCase
     {
         $expireSecs = time() + 60;
         $initialVersion = new \MongoId();
-        $initalTask = array(
+        $initalTask = [
             '_id' => 'testId',
-            'hosts' => array('different host' => array('a pid' => new \MongoDate($expireSecs))),
+            'hosts' => ['different host' => ['a pid' => new \MongoDate($expireSecs)]],
             'version' => $initialVersion,
-        );
+        ];
 
         $this->_collection->insert($initalTask);
 
@@ -62,14 +62,11 @@ final class ProcessRegistryTest extends \PHPUnit_Framework_TestCase
         $this->assertSame(1, $this->_collection->count());
         $result = $this->_collection->findOne();
 
-        $expected = array(
+        $expected = [
             '_id' => 'testId',
-            'hosts' => array(
-                'different host' => array('a pid' => $expireSecs),
-                HOSTNAME => array(getmypid() => ProcessRegistry::MONGO_INT32_MAX),
-            ),
+            'hosts' => ['different host' => ['a pid' => $expireSecs], HOSTNAME => [getmypid() => ProcessRegistry::MONGO_INT32_MAX]],
             'version' => $result['version'],
-        );
+        ];
         $result['hosts']['different host']['a pid'] = $result['hosts']['different host']['a pid']->sec;
         $result['hosts'][HOSTNAME][getmypid()] = $result['hosts'][HOSTNAME][getmypid()]->sec;
         $this->assertSame($expected, $result);
@@ -82,11 +79,11 @@ final class ProcessRegistryTest extends \PHPUnit_Framework_TestCase
      */
     public function add_overMaxGlobalProcessesOnDifferentHost()
     {
-        $initalTask = array(
+        $initalTask = [
             '_id' => 'testId',
-            'hosts' => array('different host' => array('a pid' => new \MongoDate(time() + 60))),
+            'hosts' => ['different host' => ['a pid' => new \MongoDate(time() + 60)]],
             'version' => new \MongoId(),
-        );
+        ];
 
         $this->_collection->insert($initalTask);
 
@@ -99,15 +96,15 @@ final class ProcessRegistryTest extends \PHPUnit_Framework_TestCase
      */
     public function add_overMaxGlobalProcessesOnSameHost()
     {
-        $pipes = array();
+        $pipes = [];
         $process = proc_open('sleep 3 &', self::_getDevNullProcOpenDescriptors(), $pipes);
         $status = proc_get_status($process);
 
-        $initalTask = array(
+        $initalTask = [
             '_id' => 'testId',
-            'hosts' => array(HOSTNAME => array($status['pid'] => new \MongoDate(time() + 60))),
+            'hosts' => [HOSTNAME => [$status['pid'] => new \MongoDate(time() + 60)]],
             'version' => new \MongoId(),
-        );
+        ];
 
         $this->_collection->insert($initalTask);
 
@@ -120,15 +117,15 @@ final class ProcessRegistryTest extends \PHPUnit_Framework_TestCase
      */
     public function add_overMaxHostProcesses()
     {
-        $pipes = array();
+        $pipes = [];
         $process = proc_open('sleep 3 &', self::_getDevNullProcOpenDescriptors(), $pipes);
         $status = proc_get_status($process);
 
-        $initalTask = array(
+        $initalTask = [
             '_id' => 'testId',
-            'hosts' => array(HOSTNAME => array($status['pid'] => new \MongoDate(time() + 60))),
+            'hosts' => [HOSTNAME => [$status['pid'] => new \MongoDate(time() + 60)]],
             'version' => new \MongoId(),
-        );
+        ];
 
         $this->_collection->insert($initalTask);
 
@@ -142,11 +139,11 @@ final class ProcessRegistryTest extends \PHPUnit_Framework_TestCase
     public function add_cleaningNotRunningProcessWithoutExtra()
     {
         $initialVersion = new \MongoId();
-        $initalTask = array(
+        $initalTask = [
             '_id' => 'testId',
-            'hosts' => array(HOSTNAME => array('a pid' => new \MongoDate(time() + 60))),
+            'hosts' => [HOSTNAME => ['a pid' => new \MongoDate(time() + 60)]],
             'version' => $initialVersion,
-        );
+        ];
 
         $this->_collection->insert($initalTask);
 
@@ -155,11 +152,11 @@ final class ProcessRegistryTest extends \PHPUnit_Framework_TestCase
         $this->assertSame(1, $this->_collection->count());
         $result = $this->_collection->findOne();
 
-        $expected = array(
+        $expected = [
             '_id' => 'testId',
-            'hosts' => array(HOSTNAME => array(getmypid() => ProcessRegistry::MONGO_INT32_MAX)),
+            'hosts' => [HOSTNAME => [getmypid() => ProcessRegistry::MONGO_INT32_MAX]],
             'version' => $result['version'],
-        );
+        ];
 
         $result['hosts'][HOSTNAME][getmypid()] = $result['hosts'][HOSTNAME][getmypid()]->sec;
         $this->assertSame($expected, $result);
@@ -172,18 +169,18 @@ final class ProcessRegistryTest extends \PHPUnit_Framework_TestCase
      */
     public function add_cleaningNotRunningProcessWithExtra()
     {
-        $pipes = array();
+        $pipes = [];
         $process = proc_open('sleep 3 &', self::_getDevNullProcOpenDescriptors(), $pipes);
         $status = proc_get_status($process);
         $extraPid = $status['pid'];
 
         $expireSecs = time() + 60;
         $initialVersion = new \MongoId();
-        $initalTask = array(
+        $initalTask = [
             '_id' => 'testId',
-            'hosts' => array(HOSTNAME => array($extraPid => new \MongoDate($expireSecs), 'a pid' => new \MongoDate($expireSecs))),
+            'hosts' => [HOSTNAME => [$extraPid => new \MongoDate($expireSecs), 'a pid' => new \MongoDate($expireSecs)]],
             'version' => $initialVersion,
-        );
+        ];
 
         $this->_collection->insert($initalTask);
 
@@ -192,11 +189,11 @@ final class ProcessRegistryTest extends \PHPUnit_Framework_TestCase
         $this->assertSame(1, $this->_collection->count());
         $result = $this->_collection->findOne();
 
-        $expected = array(
+        $expected = [
             '_id' => 'testId',
-            'hosts' => array(HOSTNAME => array($extraPid => $expireSecs, getmypid() => ProcessRegistry::MONGO_INT32_MAX)),
+            'hosts' => [HOSTNAME => [$extraPid => $expireSecs, getmypid() => ProcessRegistry::MONGO_INT32_MAX]],
             'version' => $result['version'],
-        );
+        ];
 
         $result['hosts'][HOSTNAME][$extraPid] = $result['hosts'][HOSTNAME][$extraPid]->sec;
         $result['hosts'][HOSTNAME][getmypid()] = $result['hosts'][HOSTNAME][getmypid()]->sec;
@@ -211,11 +208,11 @@ final class ProcessRegistryTest extends \PHPUnit_Framework_TestCase
     public function add_cleaningExpiredProcessWithoutExtra()
     {
         $initialVersion = new \MongoId();
-        $initalTask = array(
+        $initalTask = [
             '_id' => 'testId',
-            'hosts' => array('different host' => array('a pid' => new \MongoDate(time() - 1))),
+            'hosts' => ['different host' => ['a pid' => new \MongoDate(time() - 1)]],
             'version' => $initialVersion,
-        );
+        ];
 
         $this->_collection->insert($initalTask);
 
@@ -224,11 +221,11 @@ final class ProcessRegistryTest extends \PHPUnit_Framework_TestCase
         $this->assertSame(1, $this->_collection->count());
         $result = $this->_collection->findOne();
 
-        $expected = array(
+        $expected = [
             '_id' => 'testId',
-            'hosts' => array(HOSTNAME => array(getmypid() => ProcessRegistry::MONGO_INT32_MAX)),
+            'hosts' => [HOSTNAME => [getmypid() => ProcessRegistry::MONGO_INT32_MAX]],
             'version' => $result['version'],
-        );
+        ];
 
         $result['hosts'][HOSTNAME][getmypid()] = $result['hosts'][HOSTNAME][getmypid()]->sec;
         $this->assertSame($expected, $result);
@@ -243,16 +240,11 @@ final class ProcessRegistryTest extends \PHPUnit_Framework_TestCase
     {
         $expireSecs = time() + 60;
         $initialVersion = new \MongoId();
-        $initalTask = array(
+        $initalTask = [
             '_id' => 'testId',
-            'hosts' => array(
-                'different host' => array(
-                    'expiring pid' => new \MongoDate(time() - 1),
-                    'another pid' => new \MongoDate($expireSecs),
-                ),
-            ),
+            'hosts' => ['different host' => ['expiring pid' => new \MongoDate(time() - 1), 'another pid' => new \MongoDate($expireSecs)]],
             'version' => $initialVersion,
-        );
+        ];
 
         $this->_collection->insert($initalTask);
 
@@ -261,14 +253,11 @@ final class ProcessRegistryTest extends \PHPUnit_Framework_TestCase
         $this->assertSame(1, $this->_collection->count());
         $result = $this->_collection->findOne();
 
-        $expected = array(
+        $expected = [
             '_id' => 'testId',
-            'hosts' => array(
-                'different host' => array('another pid' => $expireSecs),
-                HOSTNAME => array(getmypid() => ProcessRegistry::MONGO_INT32_MAX),
-            ),
+            'hosts' => ['different host' => ['another pid' => $expireSecs], HOSTNAME => [getmypid() => ProcessRegistry::MONGO_INT32_MAX]],
             'version' => $result['version'],
-        );
+        ];
 
         $result['hosts']['different host']['another pid'] = $result['hosts']['different host']['another pid']->sec;
         $result['hosts'][HOSTNAME][getmypid()] = $result['hosts'][HOSTNAME][getmypid()]->sec;
@@ -283,11 +272,7 @@ final class ProcessRegistryTest extends \PHPUnit_Framework_TestCase
     public function add_cleaningRecycledProcessWithoutExtra()
     {
         $initialVersion = new \MongoId();
-        $initalTask = array(
-            '_id' => 'testId',
-            'hosts' => array(HOSTNAME => array(getmypid() => new \MongoDate(time() + 60))),
-            'version' => $initialVersion,
-        );
+        $initalTask = ['_id' => 'testId', 'hosts' => [HOSTNAME => [getmypid() => new \MongoDate(time() + 60)]], 'version' => $initialVersion];
 
         $this->_collection->insert($initalTask);
 
@@ -296,11 +281,11 @@ final class ProcessRegistryTest extends \PHPUnit_Framework_TestCase
         $this->assertSame(1, $this->_collection->count());
         $result = $this->_collection->findOne();
 
-        $expected = array(
+        $expected = [
             '_id' => 'testId',
-            'hosts' => array(HOSTNAME => array(getmypid() => ProcessRegistry::MONGO_INT32_MAX)),
+            'hosts' => [HOSTNAME => [getmypid() => ProcessRegistry::MONGO_INT32_MAX]],
             'version' => $result['version'],
-        );
+        ];
 
         $result['hosts'][HOSTNAME][getmypid()] = $result['hosts'][HOSTNAME][getmypid()]->sec;
         $this->assertSame($expected, $result);
@@ -313,18 +298,18 @@ final class ProcessRegistryTest extends \PHPUnit_Framework_TestCase
      */
     public function add_cleaningRecycledProcessWithExtra()
     {
-        $pipes = array();
+        $pipes = [];
         $process = proc_open('sleep 3 &', self::_getDevNullProcOpenDescriptors(), $pipes);
         $status = proc_get_status($process);
         $extraPid = $status['pid'];
 
         $expireSecs = time() + 60;
         $initialVersion = new \MongoId();
-        $initalTask = array(
+        $initalTask = [
             '_id' => 'testId',
-            'hosts' => array(HOSTNAME => array($extraPid => new \MongoDate($expireSecs), getmypid() => new \MongoDate($expireSecs))),
+            'hosts' => [HOSTNAME => [$extraPid => new \MongoDate($expireSecs), getmypid() => new \MongoDate($expireSecs)]],
             'version' => $initialVersion,
-        );
+        ];
 
         $this->_collection->insert($initalTask);
 
@@ -333,11 +318,11 @@ final class ProcessRegistryTest extends \PHPUnit_Framework_TestCase
         $this->assertSame(1, $this->_collection->count());
         $result = $this->_collection->findOne();
 
-        $expected = array(
+        $expected = [
             '_id' => 'testId',
-            'hosts' => array(HOSTNAME => array($extraPid => $expireSecs, getmypid() => ProcessRegistry::MONGO_INT32_MAX)),
+            'hosts' => [HOSTNAME => [$extraPid => $expireSecs, getmypid() => ProcessRegistry::MONGO_INT32_MAX]],
             'version' => $result['version'],
-        );
+        ];
 
         $result['hosts'][HOSTNAME][$extraPid] = $result['hosts'][HOSTNAME][$extraPid]->sec;
         $result['hosts'][HOSTNAME][getmypid()] = $result['hosts'][HOSTNAME][getmypid()]->sec;
@@ -356,10 +341,8 @@ final class ProcessRegistryTest extends \PHPUnit_Framework_TestCase
         $this->assertSame(1, $this->_collection->count());
         $result = $this->_collection->findOne();
 
-        $expected = array('_id' => 'testId', 'hosts' => array(HOSTNAME => array(getmypid() => 0)), 'version' => $result['version']);
-
         $result['hosts'][HOSTNAME][getmypid()] = $result['hosts'][HOSTNAME][getmypid()]->sec;
-        $this->assertSame($expected, $result);
+        $this->assertSame(['_id' => 'testId', 'hosts' => [HOSTNAME => [getmypid() => 0]], 'version' => $result['version']], $result);
     }
 
     /**
@@ -413,11 +396,11 @@ final class ProcessRegistryTest extends \PHPUnit_Framework_TestCase
     public function remove_withExistingProcess()
     {
         $initialVersion = new \MongoId();
-        $initalTask = array(
+        $initalTask = [
             '_id' => 'testId',
-            'hosts' => array(HOSTNAME => array('a pid' => new \MongoDate(0), getmypid() => new \MongoDate(time() + 60))),
+            'hosts' => [HOSTNAME => ['a pid' => new \MongoDate(0), getmypid() => new \MongoDate(time() + 60)]],
             'version' => $initialVersion,
-        );
+        ];
 
         $this->_collection->insert($initalTask);
 
@@ -426,10 +409,8 @@ final class ProcessRegistryTest extends \PHPUnit_Framework_TestCase
         $this->assertSame(1, $this->_collection->count());
         $result = $this->_collection->findOne();
 
-        $expected = array('_id' => 'testId', 'hosts' => array(HOSTNAME => array('a pid' => 0)), 'version' => $result['version']);
-
         $result['hosts'][HOSTNAME]['a pid'] = $result['hosts'][HOSTNAME]['a pid']->sec;
-        $this->assertSame($expected, $result);
+        $this->assertSame(['_id' => 'testId', 'hosts' => [HOSTNAME => ['a pid' => 0]], 'version' => $result['version']], $result);
         $this->assertNotSame((string)$initialVersion, (string)$result['version']);
     }
 
@@ -440,11 +421,7 @@ final class ProcessRegistryTest extends \PHPUnit_Framework_TestCase
     public function remove_withoutExistingProcess()
     {
         $initialVersion = new \MongoId();
-        $initalTask = array(
-            '_id' => 'testId',
-            'hosts' => array(HOSTNAME => array(getmypid() => new \MongoDate(time() + 60))),
-            'version' => $initialVersion,
-        );
+        $initalTask = ['_id' => 'testId', 'hosts' => [HOSTNAME => [getmypid() => new \MongoDate(time() + 60)]], 'version' => $initialVersion];
 
         $this->_collection->insert($initalTask);
 
@@ -453,9 +430,7 @@ final class ProcessRegistryTest extends \PHPUnit_Framework_TestCase
         $this->assertSame(1, $this->_collection->count());
         $result = $this->_collection->findOne();
 
-        $expected = array('_id' => 'testId', 'hosts' => array(HOSTNAME => array()), 'version' => $result['version']);
-
-        $this->assertSame($expected, $result);
+        $this->assertSame(['_id' => 'testId', 'hosts' => [HOSTNAME => []], 'version' => $result['version']], $result);
         $this->assertNotSame((string)$initialVersion, (string)$result['version']);
     }
 
@@ -478,11 +453,11 @@ final class ProcessRegistryTest extends \PHPUnit_Framework_TestCase
     {
         $initialExpireSecs = time() + 60;
         $initialVersion = new \MongoId();
-        $initalTask = array(
+        $initalTask = [
             '_id' => 'testId',
-            'hosts' => array(HOSTNAME => array(getmypid() => new \MongoDate($initialExpireSecs))),
+            'hosts' => [HOSTNAME => [getmypid() => new \MongoDate($initialExpireSecs)]],
             'version' => $initialVersion,
-        );
+        ];
 
         $this->_collection->insert($initalTask);
 
@@ -495,9 +470,7 @@ final class ProcessRegistryTest extends \PHPUnit_Framework_TestCase
         $this->assertLessThanOrEqual(time() + 120, $result['hosts'][HOSTNAME][getmypid()]->sec);
         $result['hosts'][HOSTNAME][getmypid()] = null;
 
-        $expected = array('_id' => 'testId', 'hosts' => array(HOSTNAME => array(getmypid() => null)), 'version' => $result['version']);
-
-        $this->assertSame($expected, $result);
+        $this->assertSame(['_id' => 'testId', 'hosts' => [HOSTNAME => [getmypid() => null]], 'version' => $result['version']], $result);
         $this->assertNotSame((string)$initialVersion, (string)$result['version']);
     }
 
@@ -509,13 +482,11 @@ final class ProcessRegistryTest extends \PHPUnit_Framework_TestCase
     {
         $initialExpireSecs = time() + 60;
         $initialVersion = new \MongoId();
-        $initalTask = array(
+        $initalTask = [
             '_id' => 'testId',
-            'hosts' => array(
-                HOSTNAME => array(getmypid() => new \MongoDate($initialExpireSecs), 'extra pid' => new \MongoDate(0)),
-            ),
+            'hosts' => [HOSTNAME => [getmypid() => new \MongoDate($initialExpireSecs), 'extra pid' => new \MongoDate(0)]],
             'version' => $initialVersion,
-        );
+        ];
 
         $this->_collection->insert($initalTask);
 
@@ -528,11 +499,7 @@ final class ProcessRegistryTest extends \PHPUnit_Framework_TestCase
         $this->assertLessThanOrEqual(time() + 120, $result['hosts'][HOSTNAME][getmypid()]->sec);
         $result['hosts'][HOSTNAME][getmypid()] = null;
 
-        $expected = array(
-            '_id' => 'testId',
-            'hosts' => array(HOSTNAME => array(getmypid() => null, 'extra pid' => 0)),
-            'version' => $result['version'],
-        );
+        $expected = ['_id' => 'testId', 'hosts' => [HOSTNAME => [getmypid() => null, 'extra pid' => 0]], 'version' => $result['version']];
 
         $result['hosts'][HOSTNAME]['extra pid'] = $result['hosts'][HOSTNAME]['extra pid']->sec;
         $this->assertSame($expected, $result);
@@ -546,11 +513,7 @@ final class ProcessRegistryTest extends \PHPUnit_Framework_TestCase
     public function reset_underflowMinsBeforeExpire()
     {
         $initialVersion = new \MongoId();
-        $initalTask = array(
-            '_id' => 'testId',
-            'hosts' => array(HOSTNAME => array(getmypid() => new \MongoDate(time() + 60))),
-            'version' => $initialVersion,
-        );
+        $initalTask = ['_id' => 'testId', 'hosts' => [HOSTNAME => [getmypid() => new \MongoDate(time() + 60)]], 'version' => $initialVersion];
 
         $this->_collection->insert($initalTask);
 
@@ -559,10 +522,8 @@ final class ProcessRegistryTest extends \PHPUnit_Framework_TestCase
         $this->assertSame(1, $this->_collection->count());
         $result = $this->_collection->findOne();
 
-        $expected = array('_id' => 'testId', 'hosts' => array(HOSTNAME => array(getmypid() => 0)), 'version' => $result['version']);
-
         $result['hosts'][HOSTNAME][getmypid()] = $result['hosts'][HOSTNAME][getmypid()]->sec;
-        $this->assertSame($expected, $result);
+        $this->assertSame(['_id' => 'testId', 'hosts' => [HOSTNAME => [getmypid() => 0]], 'version' => $result['version']], $result);
         $this->assertNotSame((string)$initialVersion, (string)$result['version']);
     }
 
@@ -573,11 +534,7 @@ final class ProcessRegistryTest extends \PHPUnit_Framework_TestCase
     public function reset_overflowMinsBeforeExpire()
     {
         $initialVersion = new \MongoId();
-        $initalTask = array(
-            '_id' => 'testId',
-            'hosts' => array(HOSTNAME => array(getmypid() => new \MongoDate(time() + 60))),
-            'version' => $initialVersion,
-        );
+        $initalTask = ['_id' => 'testId', 'hosts' => [HOSTNAME => [getmypid() => new \MongoDate(time() + 60)]], 'version' => $initialVersion];
 
         $this->_collection->insert($initalTask);
 
@@ -586,11 +543,11 @@ final class ProcessRegistryTest extends \PHPUnit_Framework_TestCase
         $this->assertSame(1, $this->_collection->count());
         $result = $this->_collection->findOne();
 
-        $expected = array(
+        $expected = [
             '_id' => 'testId',
-            'hosts' => array(HOSTNAME => array(getmypid() => ProcessRegistry::MONGO_INT32_MAX)),
+            'hosts' => [HOSTNAME => [getmypid() => ProcessRegistry::MONGO_INT32_MAX]],
             'version' => $result['version'],
-        );
+        ];
 
         $result['hosts'][HOSTNAME][getmypid()] = $result['hosts'][HOSTNAME][getmypid()]->sec;
         $this->assertSame($expected, $result);
@@ -621,11 +578,7 @@ final class ProcessRegistryTest extends \PHPUnit_Framework_TestCase
 
     private static function _getDevNullProcOpenDescriptors()
     {
-        return array(
-            0 => array('file', '/dev/null', 'r'),
-            1 => array('file', '/dev/null', 'w'),
-            2 => array('file', '/dev/null', 'w'),
-        );
+        return [0 => ['file', '/dev/null', 'r'], 1 => ['file', '/dev/null', 'w'], 2 => ['file', '/dev/null', 'w']];
     }
 }
 

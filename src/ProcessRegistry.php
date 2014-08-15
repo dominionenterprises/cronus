@@ -72,10 +72,10 @@ final class ProcessRegistry
         //loop in case the update fails its optimistic concurrency check
         for ($i = 0; $i < 5; ++$i) {
             $existing = $collection->findAndModify(
-                array('_id' => $id),
-                array('$setOnInsert' => array('hosts' => array(), 'version' => new \MongoId())),
+                ['_id' => $id],
+                ['$setOnInsert' => ['hosts' => [], 'version' => new \MongoId()]],
                 null,
-                array('new' => true, 'upsert' => true)
+                ['new' => true, 'upsert' => true]
             );
 
             $replacement = $existing;
@@ -106,7 +106,7 @@ final class ProcessRegistry
                 $totalPidCount += count($pids);
             }
 
-            $thisHostPids = array_key_exists($thisHostName, $replacement['hosts']) ? $replacement['hosts'][$thisHostName] : array();
+            $thisHostPids = array_key_exists($thisHostName, $replacement['hosts']) ? $replacement['hosts'][$thisHostName] : [];
 
             if ($totalPidCount >= $maxGlobalProcesses || count($thisHostPids) >= $maxHostProcesses) {
                 return false;
@@ -125,7 +125,7 @@ final class ProcessRegistry
             $thisHostPids[$thisPid] = new \MongoDate($expireSecs);
             $replacement['hosts'][$thisHostName] = $thisHostPids;
 
-            $status = $collection->update(array('_id' => $existing['_id'], 'version' => $existing['version']), $replacement);
+            $status = $collection->update(['_id' => $existing['_id'], 'version' => $existing['version']], $replacement);
             if ($status['n'] === 1) {
                 return true;
             }
@@ -160,8 +160,8 @@ final class ProcessRegistry
         $thisPid = getmypid();
 
         $collection->update(
-            array('_id' => $id),
-            array('$unset' => array("hosts.{$thisHostName}.{$thisPid}" => ''), '$set' => array('version' => new \MongoId()))
+            ['_id' => $id],
+            ['$unset' => ["hosts.{$thisHostName}.{$thisPid}" => ''], '$set' => ['version' => new \MongoId()]]
         );
     }
 
@@ -200,8 +200,8 @@ final class ProcessRegistry
         $thisPid = getmypid();
 
         $collection->update(
-            array('_id' => $id),
-            array('$set' => array("hosts.{$thisHostName}.{$thisPid}" => new \MongoDate($expireSecs), 'version' => new \MongoId()))
+            ['_id' => $id],
+            ['$set' => ["hosts.{$thisHostName}.{$thisPid}" => new \MongoDate($expireSecs), 'version' => new \MongoId()]]
         );
     }
 
@@ -212,6 +212,6 @@ final class ProcessRegistry
      */
     private static function _getEncodedHostname()
     {
-        return str_replace(array('.', '$'), array('_DOT_', '_DOLLAR_'), gethostname());
+        return str_replace(['.', '$'], ['_DOT_', '_DOLLAR_'], gethostname());
     }
 }
