@@ -3,7 +3,7 @@
 chdir(__DIR__);
 
 $returnStatus = null;
-passthru('composer install --dev', $returnStatus);
+passthru('composer install', $returnStatus);
 if ($returnStatus !== 0) {
     exit(1);
 }
@@ -14,7 +14,7 @@ if ($returnStatus !== 0) {
     exit(1);
 }
 
-passthru('./vendor/bin/phpunit --coverage-html coverage --coverage-clover clover.xml tests', $returnStatus);
+passthru('./vendor/bin/phpunit --coverage-html coverage --coverage-clover clover.xml', $returnStatus);
 if ($returnStatus !== 0) {
     exit(1);
 }
