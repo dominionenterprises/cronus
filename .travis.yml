@@ -8,3 +8,4 @@ before_script:
   - echo 'extension="mongo.so"' >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
   - bash -c 'while ! exec 6<>/dev/tcp/localhost/27017; do echo "$(date) - still trying to connect to mongo"; sleep 1; done'
 script: ./build.php
+after_script: ./vendor/bin/coveralls -v

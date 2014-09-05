@@ -1,7 +1,7 @@
 #cronus
 [![Build Status](http://img.shields.io/travis/dominionenterprises/cronus.svg?style=flat)](https://travis-ci.org/dominionenterprises/cronus)
 [![Scrutinizer Code Quality](http://img.shields.io/scrutinizer/g/dominionenterprises/cronus.svg?style=flat)](https://scrutinizer-ci.com/g/dominionenterprises/cronus/)
-[![Code Coverage](http://img.shields.io/scrutinizer/coverage/g/dominionenterprises/cronus.svg?style=flat)](https://scrutinizer-ci.com/g/dominionenterprises/cronus/)
+[![Code Coverage](http://img.shields.io/coveralls/dominionenterprises/cronus.svg?style=flat)](https://coveralls.io/r/dominionenterprises/cronus)
 
 [![Latest Stable Version](http://img.shields.io/packagist/v/dominionenterprises/cronus.svg?style=flat)](https://packagist.org/packages/dominionenterprises/cronus)
 [![Total Downloads](http://img.shields.io/packagist/dt/dominionenterprises/cronus.svg?style=flat)](https://packagist.org/packages/dominionenterprises/cronus)
