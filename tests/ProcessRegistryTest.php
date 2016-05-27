@@ -101,7 +101,7 @@ final class ProcessRegistryTest extends \PHPUnit_Framework_TestCase
     public function add_overMaxGlobalProcessesOnSameHost()
     {
         $pipes = [];
-        $process = proc_open('sleep 3 &', self::_getDevNullProcOpenDescriptors(), $pipes);
+        $process = proc_open('sleep 10 &', self::_getDevNullProcOpenDescriptors(), $pipes);
         $status = proc_get_status($process);
 
         $initalTask = [
@@ -122,7 +122,7 @@ final class ProcessRegistryTest extends \PHPUnit_Framework_TestCase
     public function add_overMaxHostProcesses()
     {
         $pipes = [];
-        $process = proc_open('sleep 3 &', self::_getDevNullProcOpenDescriptors(), $pipes);
+        $process = proc_open('sleep 10 &', self::_getDevNullProcOpenDescriptors(), $pipes);
         $status = proc_get_status($process);
 
         $initalTask = [
