@@ -125,7 +125,11 @@ final class ProcessRegistry
             $thisHostPids[$thisPid] = new \MongoDB\BSON\UTCDateTime($expireSecs * 1000);
             $replacement['hosts'][$thisHostName] = $thisHostPids;
 
-            $status = $collection->replaceOne(['_id' => $existing['_id'], 'version' => $existing['version']], $replacement);
+            $status = $collection->replaceOne(
+                ['_id' => $existing['_id'], 'version' => $existing['version']],
+                $replacement,
+                ['writeConcern' => new \MongoDB\Driver\WriteConcern(1, 100, true)]
+            );
             if ($status->getMatchedCount() === 1) {
                 return true;
             }
