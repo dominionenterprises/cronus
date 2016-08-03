@@ -15,12 +15,12 @@ final class ProcessRegistry
      *     '_id': 'a unique id',
      *     'hosts': {
      *         'a hostname' : {
-     *             'a pid': MongoDate(expire time),
+     *             'a pid': \MongoDB\BSON\UTCDateTime(expire time),
      *             ...
      *         },
      *         ...
      *     },
-     *     'version' => MongoId(an id),
+     *     'version' => \MongoDB\BSON\ObjectID(an id),
      * }
      */
 
@@ -29,7 +29,7 @@ final class ProcessRegistry
     /**
      * Add to process registry. Adds based on $maxGlobalProcesses and $maxHostProcesses after a process registry cleaning.
      *
-     * @param \MongoCollection $collection the collection
+     * @param \MongoDB\Collection $collection the collection
      * @param string $id a unique id
      * @param int $minsBeforeExpire number of minutes before a process is considered expired.
      * @param int $maxGlobalProcesses max processes of an id allowed to run across all hosts.
@@ -43,7 +43,7 @@ final class ProcessRegistry
      * @throws \InvalidArgumentException if $maxHostProcesses was not an int
      */
     public static function add(
-        \MongoCollection $collection,
+        \MongoDB\Collection $collection,
         $id,
         $minsBeforeExpire = PHP_INT_MAX,
         $maxGlobalProcesses = 1,
@@ -71,15 +71,15 @@ final class ProcessRegistry
 
         //loop in case the update fails its optimistic concurrency check
         for ($i = 0; $i < 5; ++$i) {
-            $existing = $collection->findAndModify(
+            $collection->findOneAndUpdate(
                 ['_id' => $id],
-                ['$setOnInsert' => ['hosts' => [], 'version' => new \MongoId()]],
-                null,
-                ['new' => true, 'upsert' => true]
+                ['$setOnInsert' => ['hosts' => [], 'version' => new \MongoDB\BSON\ObjectID()]],
+                ['upsert' => true]
             );
+            $existing = $collection->findOne(['_id' => $id], ['typeMap' => ['root' => 'array', 'document' => 'array', 'array' => 'array']]);
 
             $replacement = $existing;
-            $replacement['version'] = new \MongoId();
+            $replacement['version'] = new \MongoDB\BSON\ObjectID();
 
             //clean $replacement based on their pids and expire times
             foreach ($existing['hosts'] as $hostname => $pids) {
@@ -89,7 +89,7 @@ final class ProcessRegistry
                     //our machine and pid is recycled (should rarely happen)
                     if (
                         ($hostname === $thisHostName && !file_exists("/proc/{$pid}"))
-                        || time() >= $expires->sec
+                        || time() >= $expires->toDateTime()->getTimestamp()
                         || ($hostname === $thisHostName && $pid === $thisPid)
                     ) {
                         unset($replacement['hosts'][$hostname][$pid]);
@@ -122,11 +122,15 @@ final class ProcessRegistry
                 }
             }
 
-            $thisHostPids[$thisPid] = new \MongoDate($expireSecs);
+            $thisHostPids[$thisPid] = new \MongoDB\BSON\UTCDateTime($expireSecs * 1000);
             $replacement['hosts'][$thisHostName] = $thisHostPids;
 
-            $status = $collection->update(['_id' => $existing['_id'], 'version' => $existing['version']], $replacement);
-            if ($status['n'] === 1) {
+            $status = $collection->replaceOne(
+                ['_id' => $existing['_id'], 'version' => $existing['version']],
+                $replacement,
+                ['writeConcern' => new \MongoDB\Driver\WriteConcern(1, 100, true)]
+            );
+            if ($status->getMatchedCount() === 1) {
                 return true;
             }
 
@@ -143,14 +147,14 @@ final class ProcessRegistry
      * Removes from process registry. Does not do anything needed for use of the add() method. Most will only use at the end of their script
      * so the mongo collection is up to date.
      *
-     * @param \MongoCollection $collection the collection
+     * @param \MongoDB\Collection $collection the collection
      * @param string $id a unique id
      *
      * @return void
      *
      * @throws \InvalidArgumentException if $id was not a string
      */
-    public static function remove(\MongoCollection $collection, $id)
+    public static function remove(\MongoDB\Collection $collection, $id)
     {
         if (!is_string($id)) {
             throw new \InvalidArgumentException('$id was not a string');
@@ -159,16 +163,16 @@ final class ProcessRegistry
         $thisHostName = self::_getEncodedHostname();
         $thisPid = getmypid();
 
-        $collection->update(
+        $collection->updateOne(
             ['_id' => $id],
-            ['$unset' => ["hosts.{$thisHostName}.{$thisPid}" => ''], '$set' => ['version' => new \MongoId()]]
+            ['$unset' => ["hosts.{$thisHostName}.{$thisPid}" => ''], '$set' => ['version' => new \MongoDB\BSON\ObjectID()]]
         );
     }
 
     /**
      * Reset a process expire time in the registry.
      *
-     * @param \MongoCollection $collection the collection
+     * @param \MongoDB\Collection $collection the collection
      * @param string $id a unique id
      * @param int $minsBeforeExpire number of minutes before a process is considered expired.
      *
@@ -177,7 +181,7 @@ final class ProcessRegistry
      * @throws \InvalidArgumentException if $id was not a string
      * @throws \InvalidArgumentException if $minsBeforeExpire was not an int
      */
-    public static function reset(\MongoCollection $collection, $id, $minsBeforeExpire)
+    public static function reset(\MongoDB\Collection $collection, $id, $minsBeforeExpire)
     {
         if (!is_string($id)) {
             throw new \InvalidArgumentException('$id was not a string');
@@ -199,9 +203,14 @@ final class ProcessRegistry
         $thisHostName = self::_getEncodedHostname();
         $thisPid = getmypid();
 
-        $collection->update(
+        $collection->updateOne(
             ['_id' => $id],
-            ['$set' => ["hosts.{$thisHostName}.{$thisPid}" => new \MongoDate($expireSecs), 'version' => new \MongoId()]]
+            [
+                '$set' => [
+                    "hosts.{$thisHostName}.{$thisPid}" => new \MongoDB\BSON\UTCDateTime($expireSecs * 1000),
+                    'version' => new \MongoDB\BSON\ObjectID(),
+                ],
+            ]
         );
     }
 
